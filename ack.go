@@ -94,6 +94,6 @@ func (a *Ack) SetPayloadType(payloadType string) {
 
 // GinSend responds with JSON on the gin context
 func (a *Ack) GinSend(payload interface{}) {
-	a.SetPayload("all subscribers")
+	a.SetPayload(payload)
 	a.ginContext.JSON(a.ServerCode, a)
 }
