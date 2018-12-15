@@ -1,16 +1,37 @@
 package ack
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
+	"strconv"
 	"time"
 
-	"os"
-
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	uuid "github.com/satori/go.uuid"
 )
 
-const VERSION = 6
+const VERSION = 7
+
+var (
+	ackCounter = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "ack_code_count",
+			Help: "Total Acks for a code.",
+		},
+		[]string{"code"},
+	)
+
+	durationTiming = promauto.NewSummaryVec(
+		prometheus.SummaryOpts{
+			Name: "ack_duration",
+			Help: "The time it took between creating the Ack and sending it by type.",
+		},
+		[]string{"type"},
+	)
+)
 
 func Gin(c *gin.Context) Ack {
 	t := time.Now()
@@ -64,7 +85,22 @@ type Ack struct {
 func (a *Ack) GinErrorAbort(ServerCode int, errorCode string, errorMessage string) {
 	a.MakeError(ServerCode, errorCode, errorMessage)
 	a.Duration = fmt.Sprintf("%s", time.Since(a.instTime))
+
+	ackCounter.With(prometheus.Labels{"code": strconv.Itoa(a.ServerCode)}).Inc()
+
 	a.ginContext.AbortWithStatusJSON(a.ServerCode, a)
+}
+
+// UnmarshalAbort unmarshals data and aborts if it can not.
+func (a *Ack) UnmarshalAbort(data []byte, v interface{}) (interface{}, error) {
+	err := json.Unmarshal(data, v)
+	if err != nil {
+		a.SetPayloadType("ErrorMessage")
+		a.SetPayload("There was a problem unmarshaling data")
+		a.GinErrorAbort(500, "UnmarshalError", err.Error())
+	}
+
+	return v, err
 }
 
 // MakeError
@@ -94,6 +130,11 @@ func (a *Ack) SetPayloadType(payloadType string) {
 
 // GinSend responds with JSON on the gin context
 func (a *Ack) GinSend(payload interface{}) {
+
 	a.SetPayload(payload)
+
+	ackCounter.With(prometheus.Labels{"code": strconv.Itoa(a.ServerCode)}).Inc()
+	durationTiming.With(prometheus.Labels{"payload_type": a.PayloadType}).Observe(float64(time.Since(a.instTime)))
+
 	a.ginContext.JSON(a.ServerCode, a)
 }
