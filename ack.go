@@ -24,6 +24,14 @@ var (
 		[]string{"code"},
 	)
 
+	ackErrorCounter = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "ack_error_count",
+			Help: "Total Error Acks for an error type.",
+		},
+		[]string{"error_type"},
+	)
+
 	durationTiming = promauto.NewSummaryVec(
 		prometheus.SummaryOpts{
 			Name: "ack_duration",
@@ -91,8 +99,22 @@ func (a *Ack) GinErrorAbort(ServerCode int, errorCode string, errorMessage strin
 	a.ginContext.AbortWithStatusJSON(a.ServerCode, a)
 }
 
+// UnmarshalPostAbort unmarshals raw data posted through gin
+// or aborts.
+func (a *Ack) UnmarshalPostAbort(v interface{}) error {
+	rs, err := a.ginContext.GetRawData()
+	if err != nil {
+		a.SetPayloadType("ErrorMessage")
+		a.SetPayload("There was a problem with the posted data")
+		a.GinErrorAbort(500, "PostDataError", err.Error())
+		return err
+	}
+
+	return a.UnmarshalAbort(rs, v)
+}
+
 // UnmarshalAbort unmarshals data and aborts if it can not.
-func (a *Ack) UnmarshalAbort(data []byte, v interface{}) (interface{}, error) {
+func (a *Ack) UnmarshalAbort(data []byte, v interface{}) error {
 	err := json.Unmarshal(data, v)
 	if err != nil {
 		a.SetPayloadType("ErrorMessage")
@@ -100,7 +122,7 @@ func (a *Ack) UnmarshalAbort(data []byte, v interface{}) (interface{}, error) {
 		a.GinErrorAbort(500, "UnmarshalError", err.Error())
 	}
 
-	return v, err
+	return err
 }
 
 // MakeError
@@ -110,6 +132,9 @@ func (a *Ack) MakeError(ServerCode int, errorCode string, errorMessage string) {
 	a.PayloadType = "ErrorMessage"
 	a.ErrorCode = errorCode
 	a.ErrorMessage = errorMessage
+
+	// increment a counter for this error type
+	ackErrorCounter.With(prometheus.Labels{"error_type": errorMessage}).Inc()
 }
 
 // StartTimer
