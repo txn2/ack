@@ -134,7 +134,7 @@ func (a *Ack) MakeError(ServerCode int, errorCode string, errorMessage string) {
 	a.ErrorMessage = errorMessage
 
 	// increment a counter for this error type
-	ackErrorCounter.With(prometheus.Labels{"error_type": errorMessage}).Inc()
+	ackErrorCounter.With(prometheus.Labels{"error_type": errorCode}).Inc()
 }
 
 // StartTimer
