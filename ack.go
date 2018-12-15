@@ -134,7 +134,7 @@ func (a *Ack) GinSend(payload interface{}) {
 	a.SetPayload(payload)
 
 	ackCounter.With(prometheus.Labels{"code": strconv.Itoa(a.ServerCode)}).Inc()
-	durationTiming.With(prometheus.Labels{"payload_type": a.PayloadType}).Observe(float64(time.Since(a.instTime)))
+	durationTiming.With(prometheus.Labels{"payload_type": a.PayloadType}).Observe(float64(time.Since(a.instTime).Seconds()))
 
 	a.ginContext.JSON(a.ServerCode, a)
 }
