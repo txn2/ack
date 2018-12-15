@@ -29,7 +29,7 @@ var (
 			Name: "ack_duration",
 			Help: "The time it took between creating the Ack and sending it by type.",
 		},
-		[]string{"type"},
+		[]string{"payload_type"},
 	)
 )
 
