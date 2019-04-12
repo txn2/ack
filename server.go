@@ -135,14 +135,15 @@ func NewServer() *Server {
 
 	flag.Parse()
 
-	zapCfg := zap.NewDevelopmentConfig()
+	zapCfg := zap.NewProductionConfig()
+	zapCfg.DisableCaller = true
+	zapCfg.DisableStacktrace = true
+	zapCfg.OutputPaths = []string{*logout}
+
 	gin.SetMode(gin.ReleaseMode)
 
 	if *debug == true {
-		zapCfg = zap.NewProductionConfig()
-		zapCfg.DisableCaller = true
-		zapCfg.DisableStacktrace = true
-		zapCfg.OutputPaths = []string{*logout}
+		zapCfg = zap.NewDevelopmentConfig()
 		gin.SetMode(gin.DebugMode)
 	}
 
