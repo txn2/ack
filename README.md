@@ -4,6 +4,7 @@
 
 Ack server wraps gin-gonic and contains flag and environment variable configuration for
 providing health and metrics endpoints:
+
 - Basic Auth protected `/healthz` for liveness probes.
 - Prometheus metrics on port **2112** at `/metrics`.
 
