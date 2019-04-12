@@ -22,17 +22,14 @@ import (
 	"strconv"
 	"time"
 
-	io_prometheus_client "github.com/prometheus/client_model/go"
-	uuid "github.com/satori/go.uuid"
-
 	"github.com/gin-gonic/gin"
+	"github.com/gofrs/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	io_prometheus_client "github.com/prometheus/client_model/go"
 )
 
 var (
-	SendHeaders bool
-
 	ackVersion = promauto.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "ack_version",
@@ -97,7 +94,7 @@ type GinAck struct {
 // Gin Ack
 func Gin(c *gin.Context) GinAck {
 	t := time.Now()
-	u := uuid.NewV4()
+	u, _ := uuid.NewV4()
 
 	// get uuid from header
 	ru := c.Request.Header.Get("uuid")
