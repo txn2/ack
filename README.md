@@ -1,6 +1,6 @@
-# Ack
+![Ack](https://raw.githubusercontent.com/txn2/ack/master/mast.jpg)
 
-TXN2 common API acknowledgement (ACK) struct and wrapped gin-gonic Go library.
+**Ack**: A TXN2 common API acknowledgement (ACK) struct and wrapped gin-gonic Go library.
 
 Ack server wraps gin-gonic and contains flag and environment variable configuration for
 providing health and metrics endpoints:
