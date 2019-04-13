@@ -58,7 +58,6 @@ type ServerCfg struct {
 	Debug        bool
 	ReadTimeout  int
 	WriteTimeout int
-	Router       *gin.Engine
 }
 
 // Server
@@ -66,6 +65,7 @@ type Server struct {
 	Cfg    *ServerCfg
 	Logger *zap.Logger
 	Router *gin.Engine
+	Client *Client
 }
 
 // NewServer
@@ -118,7 +118,14 @@ func NewServer() *Server {
 		debug        = flag.Bool("debug", debugEnvBool, "Debug logging mode")
 	)
 
-	cfg := &ServerCfg{
+	clientCfg := &ClientCfg{
+		MaxIdleConnsPerHost: 10,
+		DialContextTimeout:  10,
+		NetTimeout:          10,
+		ConTimeout:          10,
+	}
+
+	serverCfg := &ServerCfg{
 		Ip:           *ip,
 		Port:         *port,
 		Metrics:      *metrics,
@@ -195,9 +202,10 @@ func NewServer() *Server {
 	r.NoRoute(NoRouteHandler())
 
 	return &Server{
-		Cfg:    cfg,
+		Cfg:    serverCfg,
 		Logger: logger,
 		Router: r,
+		Client: NewHttpClient(clientCfg),
 	}
 }
 

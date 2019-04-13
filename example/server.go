@@ -31,8 +31,16 @@ func main() {
 	if *test {
 		server.Router.GET("/test", func(c *gin.Context) {
 			ak := ack.Gin(c)
+
+			res, err := server.Client.Http.Get("http://" + server.Cfg.Ip + ":" + server.Cfg.Port + "/healthz")
+			if err != nil {
+				ak.GinErrorAbort(500, "ClientError", err.Error())
+				return
+			}
+
+			// should get 401 Unauthorized from healthz
 			ak.SetPayloadType("Message")
-			ak.GinSend("A test message.")
+			ak.GinSend("Got " + res.Status + " from healthz.")
 		})
 	}
 
