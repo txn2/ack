@@ -123,31 +123,6 @@ func Gin(c *gin.Context) GinAck {
 	return ak
 }
 
-// HealthzHandler
-func HealthzHandler() func(c *gin.Context) {
-	return func(c *gin.Context) {
-		ak := Gin(c)
-
-		mmf, err := getMetrics()
-		if err != nil {
-			ak.GinErrorAbort(500, "MetricsError", err.Error())
-			return
-		}
-
-		ak.SetPayloadType("healthz")
-		ak.GinSend(mmf)
-	}
-}
-
-// NoRouteHandler
-func NoRouteHandler() func(c *gin.Context) {
-	return func(c *gin.Context) {
-		ak := Gin(c)
-		ak.Ack.SetPayload("route not found")
-		ak.GinErrorAbort(404, "E404", "NoRoute")
-	}
-}
-
 // SetPayload
 func (ga *GinAck) SetPayload(payload interface{}) {
 	ga.Ack.SetPayload(payload)
@@ -235,18 +210,3 @@ func (ga *GinAck) setHeaders() {
 
 // MappedMetricFamily
 type MappedMetricFamily map[string]*io_prometheus_client.MetricFamily
-
-// setHeaders
-func getMetrics() (MappedMetricFamily, error) {
-	mmf := make(MappedMetricFamily, 0)
-	mf, err := prometheus.DefaultGatherer.Gather()
-	if err != nil {
-		return mmf, err
-	}
-
-	for _, metric := range mf {
-		mmf[*metric.Name] = metric
-	}
-
-	return mmf, nil
-}
