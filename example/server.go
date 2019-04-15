@@ -20,13 +20,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/txn2/ack"
+	"github.com/txn2/micro"
 )
 
 func main() {
 
 	test := flag.Bool("test", true, "A test flag")
 
-	server := ack.NewServer()
+	server := micro.NewServer()
 
 	if *test {
 		server.Router.GET("/test", func(c *gin.Context) {
