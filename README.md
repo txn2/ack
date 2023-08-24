@@ -7,8 +7,8 @@
 
 ## Run Example
 
-```bash
-AGENT=test SERVICE_ENV=dev SERVICE_NS=example go run ./example/server.go --test
+```shell
+go run ./example/server.go
 ```
 
 ## Example Ack Payload
